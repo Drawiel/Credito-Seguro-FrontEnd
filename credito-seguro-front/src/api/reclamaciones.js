@@ -1,17 +1,24 @@
-import axios from 'axios'; 
+import axios from './axios'; 
 
-export const crearReclamacionRequest = async (reclamacion) => {
-    const form = new FormData();
-    form.append('motivo', reclamacion.motivo);
-    form.append('idHistorialScore', reclamacion.idHistorialScore);
-    
-    if (reclamacion.evidencia && reclamacion.evidencia[0]) {
-        form.append('evidencia', reclamacion.evidencia[0]);
-    }
+export const crearReclamacionRequest = async (datos) => {
+    return axios.post('/reclamaciones', datos);
+};
 
-    return axios.post('/reclamaciones', form, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+export const obtenerReclamacionesRequest = async () => {
+    return axios.get('/reclamaciones/mis-reclamaciones');
+};
+
+export const obtenerTodasReclamacionesRequest = async () => {
+    return axios.get('/reclamaciones/admin/todas');
+};
+
+export const obtenerEvidenciaRequest = async (nombreArchivo) => {
+    return axios.get(`/reclamaciones/evidencia/${nombreArchivo}`, {
+        responseType: 'blob' // Esto le dice a axios que viene un archivo, no un JSON
     });
+};
+
+export const atenderReclamacionRequest = async (id, datos) => {
+    // datos debe ser { respuestaAdmin: "...", estado: "RESUELTO" }
+    return axios.patch(`/reclamaciones/${id}/atender`, datos);
 };

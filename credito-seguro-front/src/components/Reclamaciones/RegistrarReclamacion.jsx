@@ -3,6 +3,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { reclamacionSchema } from '../../schemas/reclamacionesSchema';
 import { crearReclamacionRequest } from '../../api/reclamaciones';
 import { useState } from 'react';
+import { useEffect } from 'react';
+
+const convertirABase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+    });
+};
 
 export default function RegistrarReclamacion({ registro, onClose, onExito }) {
     const [errorGeneral, setErrorGeneral] = useState(null);
@@ -16,8 +26,19 @@ export default function RegistrarReclamacion({ registro, onClose, onExito }) {
 
     const onSubmit = async (data) => {
         try {
-            const res = await crearReclamacionRequest(data);
-            onExito(res.data.datos.folio); 
+            let evidenciaBase64 = null;
+            if (data.evidencia && data.evidencia[0]) {
+                evidenciaBase64 = await convertirABase64(data.evidencia[0]);
+            }
+
+            const payload = {
+                motivo: data.motivo,
+                idHistorialScore: registro.id,
+                evidencia: evidenciaBase64 
+            };
+
+            const res = await crearReclamacionRequest(payload);
+            onExito(res.data.datos.folio);
             onClose();
         } catch (error) {
             console.error(error);
@@ -25,63 +46,91 @@ export default function RegistrarReclamacion({ registro, onClose, onExito }) {
         }
     };
 
+    useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md window_registrar_reclamacion" role="dialog" aria-labelledby="titulo-modal">
-                <h2 id="titulo-modal" className="text-xl font-bold mb-4">Iniciar Disputa</h2>
+        <div className="modal-overlay">
+            
+            <div 
+                className="modal-box" 
+                role="dialog" 
+                aria-modal="true" 
+                aria-labelledby="titulo-modal"
+            >
+                <h2 id="titulo-modal" className="text-xl font-bold mb-4 text-dark">
+                    Iniciar Disputa
+                </h2>
                 
-                <p className="mb-4 text-gray-700">
-                    Estás registrando una inconformidad para la entidad: <strong>{registro.Entidad.nombreLegal}</strong>
+                <p className="mb-4 text-dark">
+                    Estás registrando una inconformidad para la entidad: 
+                    <strong className="text-primary ml-1">{registro.Entidad.nombreLegal}</strong>
                 </p>
 
                 {errorGeneral && (
-                    <div className="bg-red-100 text-red-700 p-2 mb-4 rounded alert_error" role="alert">
+                    <div className="bg-red-50 text-red-700 p-3 mb-4 rounded-lg text-sm border border-red-200" role="alert">
                         {errorGeneral}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
-                    {/* Campo oculto para el ID */}
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <input type="hidden" {...register('idHistorialScore', { valueAsNumber: true })} />
 
-                    {/* Campo Motivo */}
                     <div className="mb-4">
-                        <label htmlFor="motivo" className="block text-sm font-medium text-gray-700">Motivo (Obligatorio)</label>
+                        <label htmlFor="motivo" className="label-standard">
+                            Motivo (Obligatorio)
+                        </label>
                         <textarea
                             id="motivo"
                             rows="4"
-                            className={`mt-1 block w-full border rounded-md p-2 ${errors.motivo ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`input-standard ${errors.motivo ? 'border-red-500 focus:ring-red-500' : ''}`}
                             {...register('motivo')}
                             aria-invalid={errors.motivo ? "true" : "false"}
+                            aria-describedby={errors.motivo ? "error-motivo" : undefined}
                         ></textarea>
-                        {errors.motivo && <span className="text-red-500 text-sm">{errors.motivo.message}</span>}
+                        
+                        {errors.motivo && (
+                            <span id="error-motivo" className="text-red-600 text-xs mt-1 font-medium">
+                                {errors.motivo.message}
+                            </span>
+                        )}
                     </div>
 
-                    {/* Campo Evidencia */}
                     <div className="mb-6">
-                        <label htmlFor="evidencia" className="block text-sm font-medium text-gray-700">Evidencia (Opcional - PDF/Img)</label>
+                        <label htmlFor="evidencia" className="label-standard">
+                            Evidencia (Opcional - PDF/Img)
+                        </label>
                         <input
                             type="file"
                             id="evidencia"
                             accept=".pdf,.jpg,.jpeg,.png"
-                            className="mt-1 block w-full text-sm text-gray-500"
+                            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 transition-all"
                             {...register('evidencia')}
                         />
-                        {errors.evidencia && <span className="text-red-500 text-sm">{errors.evidencia.message}</span>}
+                        {errors.evidencia && (
+                            <span className="text-red-600 text-xs mt-1 font-medium">
+                                {errors.evidencia.message}
+                            </span>
+                        )}
                     </div>
 
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-3 mt-6">
                         <button 
                             type="button" 
                             onClick={onClose}
-                            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+                            className="btn-secondary"
                         >
                             Cancelar
                         </button>
                         <button 
                             type="submit" 
                             disabled={isSubmitting}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            className="btn-primary"
                         >
                             {isSubmitting ? 'Enviando...' : 'Enviar Reclamación'}
                         </button>
