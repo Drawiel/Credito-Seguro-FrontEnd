@@ -26,6 +26,9 @@ function App() {
         
         {/* Ruta protegida (Dashboard) */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/mis-reclamaciones" element={<MisReclamacionesPage />} />
+
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
 
         {/* Redirección por defecto: si entran a la raíz, van al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
