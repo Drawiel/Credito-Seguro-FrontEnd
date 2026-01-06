@@ -1,68 +1,43 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* 1. Inyectamos las bases de Tailwind */
+@theme {
+  --color-primary: #0099FF;
+  --color-primary-hover: #007ACC;
+  
+  --color-secondary: #6200EE;
+  --color-secondary-hover: #3700B3;
+  
+  --color-accent: #00E5FF;
+  
+  --color-dark: #1F2937;
+  --color-light: #6B7280;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --font-sans: Inter, system-ui, sans-serif;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer components {
+  
+  /* --- BOTONES --- */
+  .btn-primary {
+    @apply bg-primary text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:bg-primary-hover transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  a:hover {
-    color: #747bff;
+
+  .btn-secondary {
+    @apply bg-gray-100 text-dark font-medium px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-all duration-200;
   }
-  button {
-    background-color: #f9f9f9;
+
+  /* --- INPUTS --- */
+  .input-standard {
+    @apply mt-1 block w-full border border-gray-300 rounded-lg px-4 py-2.5 text-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow;
+  }
+
+  /* --- MODALES --- */
+  .modal-overlay {
+    @apply fixed inset-0 bg-dark/60 flex justify-center items-center z-50 backdrop-blur-sm p-4;
+  }
+
+  .modal-box {
+    @apply bg-white rounded-xl shadow-2xl w-full max-w-lg relative p-6;
   }
 }
