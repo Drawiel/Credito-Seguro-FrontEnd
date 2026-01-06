@@ -1,37 +1,82 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
 
-// Un componente simple para el Dashboard (solo para probar que el login funcionó)
-const Dashboard = () => {
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = '/login';
-  };
+import RequireAuth from "./components/RequireAuth";
 
-  return (
-    <div style={{ padding: '2rem' }}>
-      <h1>¡Bienvenido al Panel!</h1>
-      <p>Has iniciado sesión correctamente.</p>
-      <button onClick={handleLogout}>Cerrar Sesión</button>
-    </div>
-  );
-};
+import AdminLayout from "./pages/AdminLayout";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminEntidadesPage from "./pages/AdminEntidadesPage";
+import AdminAprobarEntidadPage from "./pages/AdminAprobarEntidadPage";
+
+import BancoLayout from "./pages/BancoLayout";
+import BancoConsultaTercerosPage from "./pages/BancoConsultaTercerosPage";
+
+import ClienteLayout from "./pages/ClienteLayout";
+import ClienteHistorialPage from "./pages/ClienteHistorialPage";
+import ClienteScorePage from "./pages/ClienteScorePage";
+import ClienteReportePage from "./pages/ClienteReportePage";
+import MisReclamacionesPage from "./pages/MisReclamacionesPage";
+
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública */}
+        {/* Pública */}
         <Route path="/login" element={<Login />} />
-        
-        {/* Ruta protegida (Dashboard) */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/mis-reclamaciones" element={<MisReclamacionesPage />} />
 
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        {/* ADMIN */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth allow="ADMIN">
+              <AdminLayout />
+            </RequireAuth>
+          }
+       >
+          {/* default: /admin -> /admin/reclamaciones */}
+          <Route index element={<Navigate to="reclamaciones" replace />} />
 
-        {/* Redirección por defecto: si entran a la raíz, van al login */}
+          <Route path="reclamaciones" element={<AdminDashboardPage />} />
+          <Route path="entidades" element={<AdminEntidadesPage />} />
+          <Route path="aprobar-entidad" element={<AdminAprobarEntidadPage />} />
+        </Route>
+
+        {/* BANCO */}
+        <Route
+          path="/banco"
+          element={
+            <RequireAuth allow="BANCO">
+              <BancoLayout  />
+            </RequireAuth>
+          }
+        >
+        <Route index element={<BancoConsultaTercerosPage />} />
+      </Route>
+
+        {/* CLIENTE */}
+        <Route
+          path="/cliente"
+          element={
+            <RequireAuth allow="CLIENTE">
+              <ClienteLayout />
+            </RequireAuth>
+          }
+        >
+        <Route index element={<Navigate to="historial" replace />} />
+        <Route path="historial" element={<ClienteHistorialPage />} />
+        <Route path="score" element={<ClienteScorePage />} />
+        <Route path="reporte" element={<ClienteReportePage />} />
+        <Route path="reclamaciones" element={<MisReclamacionesPage />} />
+      </Route>
+
+
+
+        {/* Raíz */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Cualquier otra */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

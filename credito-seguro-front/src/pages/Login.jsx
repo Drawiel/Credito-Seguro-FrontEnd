@@ -44,8 +44,20 @@ export default function Login() {
         localStorage.setItem('token', token);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('usuario', JSON.stringify(usuario));
-        
-        navigate('/dashboard'); 
+
+        const rol = usuario?.rol; // "ADMINISTRADOR" | "USUARIO"
+        const tipoEntidad = usuario?.entidad?.tipoEntidad; // "FISICA" | "MORAL"
+
+        if (rol === "ADMINISTRADOR") {
+          navigate("/admin");
+        } else if (tipoEntidad === "MORAL") {
+          // entidad bancaria/consultante
+          navigate("/banco");
+        } else {
+          // persona física (titular)
+          navigate("/cliente");
+        }
+
       } else {
         setErrorGeneral("El servidor no devolvió los tokens esperados.");
       }
