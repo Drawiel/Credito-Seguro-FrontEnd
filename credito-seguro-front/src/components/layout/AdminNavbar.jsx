@@ -55,14 +55,6 @@ export default function AdminNavbar() {
                 Gestionar entidades financieras
               </NavLink>
 
-              <NavLink
-                to="/admin/aprobar-entidad"
-                className={({ isActive }) =>
-                  `${linkBase} ${isActive ? linkActive : linkInactive}`
-                }
-              >
-                Aprobar entidad financiera
-              </NavLink>
             </nav>
 
             <button
