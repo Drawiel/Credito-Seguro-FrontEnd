@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import RegistroEntidadFinancieraPage from "./pages/RegistroEntidadFinancieraPage";
+
 
 import RequireAuth from "./components/RequireAuth";
 
@@ -77,6 +79,9 @@ function App() {
 
         {/* Cualquier otra */}
         <Route path="*" element={<Navigate to="/login" replace />} />
+      
+        <Route path="/registrar-entidad" element={<RegistroEntidadFinancieraPage />} />
+
       </Routes>
     </BrowserRouter>
   );
