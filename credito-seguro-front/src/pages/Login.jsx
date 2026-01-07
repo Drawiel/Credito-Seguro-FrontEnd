@@ -105,7 +105,7 @@ export default function Login() {
 
         {/* Botones secundarios */}
         <div style={styles.actions}>
-          <button onClick={() => navigate('/crear-cuenta')} style={styles.secondaryButton}>
+          <button onClick={() => navigate('/registrar-cuenta')} style={styles.secondaryButton}>
             Crear cuenta
           </button>
 
