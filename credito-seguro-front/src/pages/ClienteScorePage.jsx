@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { axiosPrivate } from '../api/axios';
 import { calcularScoreRequest } from '../api/scores';
 
 export default function ClienteScorePage() {
@@ -25,16 +26,27 @@ export default function ClienteScorePage() {
         return;
       }
 
-      const response = await calcularScoreRequest(rfc)
+      const response = await calcularScoreRequest(rfc);
       
       if (response.data.error === false) {
         setEntidad(response.data.datos.entidad);
         setScoring(response.data.datos.scoring);
         setConsultasRestantes(response.data.datos.consultasRestantes);
+      } else {
+        setError(response.data.mensaje || 'Error al calcular el score crediticio');
       }
     } catch (err) {
       console.error('Error al calcular score:', err);
-      setError(err.response?.data?.mensaje || 'Error al calcular el score crediticio');
+      const mensaje = err.response?.data?.mensaje || 'Error al calcular el score crediticio';
+      
+      // Manejar errores específicos
+      if (mensaje.includes('no tiene consentimiento') || err.response?.status === 403) {
+        setError('Necesitas otorgar consentimiento antes de calcular tu score. Ve a la sección de Historial Crediticio.');
+      } else if (mensaje.includes('sin historial') || mensaje.includes('no se encontró historial')) {
+        setError('No tienes historial crediticio registrado. Primero consulta tu historial para verificar si tienes obligaciones.');
+      } else {
+        setError(mensaje);
+      }
     } finally {
       setLoading(false);
     }
@@ -101,6 +113,7 @@ export default function ClienteScorePage() {
         <p className="text-slate-600">Consulta tu score.</p>
       </header>
 
+      {/* Información del titular */}
       {entidad && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div className="flex justify-between items-center">
@@ -121,6 +134,7 @@ export default function ClienteScorePage() {
 
       {scoring && (
         <>
+          {/* Score Principal */}
           <div className="bg-gradient-to-br from-white to-slate-50 border-2 rounded-lg p-8 mb-6 text-center" style={{ borderColor: scoring.nivelRiesgo.color }}>
             <div className="mb-4">
               <div className="text-6xl font-bold mb-2" style={{ color: scoring.nivelRiesgo.color }}>
@@ -135,6 +149,7 @@ export default function ClienteScorePage() {
             <p className="text-sm text-slate-500 mt-1">Rango: {scoring.nivelRiesgo.rango}</p>
           </div>
 
+          {/* Componentes del Score */}
           <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Componentes del Score</h2>
             <div className="space-y-4">
@@ -157,6 +172,7 @@ export default function ClienteScorePage() {
                       </div>
                     </div>
                     
+                    {/* Barra de progreso */}
                     <div className="w-full bg-slate-200 rounded-full h-2 mb-3">
                       <div 
                         className="h-2 rounded-full transition-all" 
@@ -168,6 +184,7 @@ export default function ClienteScorePage() {
                       ></div>
                     </div>
 
+                    {/* Factores positivos */}
                     {componente.positivos && componente.positivos.length > 0 && (
                       <div className="mb-2">
                         {componente.positivos.map((positivo, idx) => (
@@ -179,6 +196,7 @@ export default function ClienteScorePage() {
                       </div>
                     )}
 
+                    {/* Factores negativos */}
                     {componente.negativos && componente.negativos.length > 0 && (
                       <div>
                         {componente.negativos.map((negativo, idx) => (
@@ -190,6 +208,7 @@ export default function ClienteScorePage() {
                       </div>
                     )}
 
+                    {/* Tipos de crédito (para mix crediticio) */}
                     {componente.tiposCredito && componente.tiposCredito.length > 0 && (
                       <div className="text-sm text-slate-600">
                         Tipos de crédito: {componente.tiposCredito.join(', ')}
@@ -201,7 +220,9 @@ export default function ClienteScorePage() {
             </div>
           </div>
 
+          {/* Factores Positivos y Negativos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Factores Positivos */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h2 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
                 <span className="text-2xl">✓</span>
@@ -217,6 +238,7 @@ export default function ClienteScorePage() {
               </ul>
             </div>
 
+            {/* Factores Negativos */}
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <h2 className="text-lg font-bold text-red-900 mb-4 flex items-center gap-2">
                 <span className="text-2xl">✗</span>
@@ -237,6 +259,7 @@ export default function ClienteScorePage() {
             </div>
           </div>
 
+          {/* Recomendaciones */}
           {scoring.recomendaciones && scoring.recomendaciones.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Recomendaciones</h2>
@@ -268,6 +291,7 @@ export default function ClienteScorePage() {
             </div>
           )}
 
+          {/* Información adicional */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
             <p className="text-sm text-slate-600">
               Score calculado el {formatearFecha(scoring.fechaCalculo)}
