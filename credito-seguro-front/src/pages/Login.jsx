@@ -109,7 +109,7 @@ export default function Login() {
             Crear cuenta
           </button>
 
-          <button onClick={() => navigate('/registrar-cuenta')} style={styles.secondaryButton}>
+          <button onClick={() => navigate('/registrar-entidad')} style={styles.secondaryButton}>
             Registrar Entidad
           </button>
 
