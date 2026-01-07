@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios'; // Importamos la instancia pública que creamos antes
+import api from '../api/axios';
+import logo from '../assets/logo.png'; // 👈 logo
 
-// 1. Esquema de validación (Mismo que en tu backend)
+// Validación
 const loginSchema = z.object({
   correo: z.string()
     .min(1, "El correo es requerido")
@@ -17,53 +18,38 @@ const loginSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const [errorGeneral, setErrorGeneral] = useState('');
-  
-  // 2. Configuración del formulario
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors, isSubmitting } 
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
   } = useForm({
     resolver: zodResolver(loginSchema)
   });
 
-  // 3. Función que envía los datos
   const onSubmit = async (data) => {
     setErrorGeneral('');
     try {
-      // NOTA: Asegúrate de que tu backend espera POST en /auth/login
       const response = await api.post('/auth/login', data);
-      
-      console.log("Respuesta del servidor:", response.data);
-
-      // 4. Guardamos los tokens (Ajusta 'datos' según venga tu respuesta JSON exacta)
-      // Normalmente responderConExito devuelve { success: true, mensaje: "", datos: {...} }
       const { token, refreshToken, usuario } = response.data.datos || response.data;
 
-      if (token && refreshToken) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('usuario', JSON.stringify(usuario));
-
-        const rol = usuario?.rol; // "ADMINISTRADOR" | "USUARIO"
-        const tipoEntidad = usuario?.entidad?.tipoEntidad; // "FISICA" | "MORAL"
-
-        if (rol === "ADMINISTRADOR") {
-          navigate("/admin");
-        } else if (tipoEntidad === "MORAL") {
-          // entidad bancaria/consultante
-          navigate("/banco");
-        } else {
-          // persona física (titular)
-          navigate("/cliente");
-        }
-
-      } else {
+      if (!token || !refreshToken) {
         setErrorGeneral("El servidor no devolvió los tokens esperados.");
+        return;
       }
 
+      localStorage.setItem('token', token);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+
+      const rol = usuario?.rol;
+      const tipoEntidad = usuario?.entidad?.tipoEntidad;
+
+      if (rol === "ADMINISTRADOR") navigate("/admin");
+      else if (tipoEntidad === "MORAL") navigate("/banco");
+      else navigate("/cliente");
+
     } catch (error) {
-      console.error(error);
       if (error.response) {
         setErrorGeneral(error.response.data.mensaje || "Credenciales incorrectas");
       } else {
@@ -72,20 +58,25 @@ export default function Login() {
     }
   };
 
-  // 5. Renderizado (HTML + CSS Básico)
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>Iniciar Sesión</h2>
+
+        {/* Logo */}
+        <div style={styles.logoContainer}>
+          <img src={logo} alt="Crédito Seguro" style={styles.logo} />
+          <h1 style={styles.brand}>CRÉDITO SEGURO</h1>
+        </div>
+
         <p style={styles.subtitle}>Sistema de Consulta Crediticia</p>
 
         <form onSubmit={handleSubmit(onSubmit)} style={styles.form}>
-          
-          {/* Campo Correo */}
+
+          {/* Correo */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Correo Electrónico</label>
-            <input 
-              type="email" 
+            <label style={styles.label}>Correo electrónico</label>
+            <input
+              type="email"
               {...register('correo')}
               style={styles.input}
               placeholder="admin@banco.com"
@@ -93,11 +84,11 @@ export default function Login() {
             {errors.correo && <span style={styles.error}>{errors.correo.message}</span>}
           </div>
 
-          {/* Campo Contraseña */}
+          {/* Contraseña */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Contraseña</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               {...register('contraseña')}
               style={styles.input}
               placeholder="********"
@@ -105,14 +96,24 @@ export default function Login() {
             {errors.contraseña && <span style={styles.error}>{errors.contraseña.message}</span>}
           </div>
 
-          {/* Mensaje de Error General */}
           {errorGeneral && <div style={styles.alertError}>{errorGeneral}</div>}
 
-          {/* Botón Submit */}
-          <button type="submit" disabled={isSubmitting} style={styles.button}>
-            {isSubmitting ? 'Cargando...' : 'Ingresar'}
+          <button type="submit" disabled={isSubmitting} style={styles.primaryButton}>
+            {isSubmitting ? 'Cargando...' : 'Iniciar sesión'}
           </button>
         </form>
+
+        {/* Botones secundarios */}
+        <div style={styles.actions}>
+          <button onClick={() => navigate('/crear-cuenta')} style={styles.secondaryButton}>
+            Crear cuenta
+          </button>
+
+          <button onClick={() => navigate('/registrar-entidad')} style={styles.secondaryButton}>
+            Registrar Entidad
+          </button>
+
+        </div>
       </div>
     </div>
   );
@@ -120,29 +121,110 @@ export default function Login() {
 
 const styles = {
   container: {
-    display: 'flex', justifyContent: 'center', alignItems: 'center',
-    height: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'Arial, sans-serif'
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    backgroundColor: '#f3f4f6',
+    fontFamily: 'Arial, sans-serif'
   },
   card: {
-    backgroundColor: 'white', padding: '2rem', borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px'
+    backgroundColor: '#ffffff',
+    padding: '2.5rem',
+    borderRadius: '12px',
+    width: '100%',
+    maxWidth: '420px',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
   },
-  title: { textAlign: 'center', color: '#111827', marginBottom: '0.5rem' },
-  subtitle: { textAlign: 'center', color: '#6b7280', marginBottom: '2rem', fontSize: '0.9rem' },
-  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  inputGroup: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-  label: { fontSize: '0.9rem', fontWeight: 'bold', color: '#374151' },
+  logoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '1rem'
+  },
+  logo: {
+    height: '60px',
+    width: '60px',
+    objectFit: 'contain'
+  },
+  brand: {
+    fontSize: '1.4rem',
+    fontWeight: 'bold',
+    color: '#1f2937',
+    letterSpacing: '0.05em'
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: '#6b7280',
+    marginBottom: '1.8rem',
+    fontSize: '0.9rem'
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem'
+  },
+  label: {
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#374151'
+  },
   input: {
-    padding: '0.75rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '1rem'
+    padding: '0.75rem',
+    borderRadius: '6px',
+    border: '1px solid #d1d5db',
+    fontSize: '0.95rem'
   },
-  button: {
-    padding: '0.75rem', backgroundColor: '#2563eb', color: 'white', border: 'none',
-    borderRadius: '4px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold',
-    marginTop: '1rem'
+  primaryButton: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    backgroundColor: '#2563eb',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    cursor: 'pointer'
   },
-  error: { color: '#dc2626', fontSize: '0.8rem' },
+  actions: {
+    marginTop: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem'
+  },
+  secondaryButton: {
+    padding: '0.65rem',
+    backgroundColor: '#e5e7eb',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '0.9rem',
+    cursor: 'pointer'
+  },
+  outlineButton: {
+    padding: '0.65rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #2563eb',
+    color: '#2563eb',
+    borderRadius: '6px',
+    fontSize: '0.9rem',
+    cursor: 'pointer'
+  },
+  error: {
+    color: '#dc2626',
+    fontSize: '0.75rem'
+  },
   alertError: {
-    backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.75rem',
-    borderRadius: '4px', fontSize: '0.9rem', textAlign: 'center'
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
+    padding: '0.75rem',
+    borderRadius: '6px',
+    fontSize: '0.85rem',
+    textAlign: 'center'
   }
 };
